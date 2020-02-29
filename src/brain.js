@@ -1,3 +1,21 @@
+/* eslint-disable
+    consistent-return,
+    constructor-super,
+    func-names,
+    guard-for-in,
+    no-constant-condition,
+    no-eval,
+    no-param-reassign,
+    no-restricted-syntax,
+    no-return-assign,
+    no-this-before-super,
+    no-underscore-dangle,
+    no-use-before-define,
+    no-var,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS001: Remove Babel/TypeScript constructor workaround
@@ -8,7 +26,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const {EventEmitter} = require('events');
+const { EventEmitter } = require('events');
 
 const User = require('./user');
 
@@ -20,20 +38,18 @@ class Brain extends EventEmitter {
     {
       // Hack: trick Babel/TypeScript into allowing this before super.
       if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
+      const thisFn = (() => this).toString();
+      const thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
       eval(`${thisName} = this;`);
     }
     this.data = {
-      users:    { },
-      _private: { }
+      users: { },
+      _private: { },
     };
 
     this.autoSave = true;
 
-    robot.on("running", () => {
-      return this.resetSaveInterval(5);
-    });
+    robot.on('running', () => this.resetSaveInterval(5));
   }
 
   // Public: Store key-value pair under the private namespace and extend
@@ -106,8 +122,8 @@ class Brain extends EventEmitter {
     if (this.saveInterval) { clearInterval(this.saveInterval); }
     return this.saveInterval = setInterval(() => {
       if (this.autoSave) { return this.save(); }
-    }
-    , seconds * 1000);
+    },
+    seconds * 1000);
   }
 
   // Public: Merge keys loaded from a DB against the in memory representation.
@@ -116,7 +132,7 @@ class Brain extends EventEmitter {
   //
   // Caveats: Deeply nested structures don't merge well.
   mergeData(data) {
-    for (let k in (data || { })) {
+    for (const k in (data || { })) {
       this.data[k] = data[k];
     }
 
@@ -154,8 +170,8 @@ class Brain extends EventEmitter {
   userForName(name) {
     let result = null;
     const lowerName = name.toLowerCase();
-    for (let k in (this.data.users || { })) {
-      const userName = this.data.users[k]['name'];
+    for (const k in (this.data.users || { })) {
+      const userName = this.data.users[k].name;
       if ((userName != null) && (userName.toString().toLowerCase() === lowerName)) {
         result = this.data.users[k];
       }
@@ -173,7 +189,7 @@ class Brain extends EventEmitter {
     return (() => {
       const result = [];
       const object = this.data.users || {};
-      for (let key in object) {
+      for (const key in object) {
         const user = object[key];
         if (user.name.toLowerCase().lastIndexOf(lowerFuzzyName, 0) === 0) {
           result.push(user);
@@ -191,7 +207,7 @@ class Brain extends EventEmitter {
   usersForFuzzyName(fuzzyName) {
     const matchedUsers = this.usersForRawFuzzyName(fuzzyName);
     const lowerFuzzyName = fuzzyName.toLowerCase();
-    for (let user of Array.from(matchedUsers)) {
+    for (const user of Array.from(matchedUsers)) {
       if (user.name.toLowerCase() === lowerFuzzyName) { return [user]; }
     }
 
@@ -202,9 +218,9 @@ class Brain extends EventEmitter {
 // Private: Extend obj with objects passed as additional args.
 //
 // Returns the original object with updated changes.
-var extend = function(obj, ...sources) {
-  for (let source of Array.from(sources)) {
-    for (let key of Object.keys(source || {})) { const value = source[key]; obj[key] = value; }
+var extend = function (obj, ...sources) {
+  for (const source of Array.from(sources)) {
+    for (const key of Object.keys(source || {})) { const value = source[key]; obj[key] = value; }
   }
   return obj;
 };

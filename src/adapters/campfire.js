@@ -1,3 +1,23 @@
+/* eslint-disable
+    consistent-return,
+    constructor-super,
+    implicit-arrow-linebreak,
+    max-classes-per-file,
+    max-len,
+    no-buffer-constructor,
+    no-cond-assign,
+    no-constant-condition,
+    no-eval,
+    no-param-reassign,
+    no-return-assign,
+    no-shadow,
+    no-this-before-super,
+    no-unreachable,
+    no-unused-vars,
+    no-use-before-define,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS001: Remove Babel/TypeScript constructor workaround
@@ -7,39 +27,40 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const HTTPS          = require('https');
-const {EventEmitter} = require('events');
+const HTTPS = require('https');
+const { EventEmitter } = require('events');
 
-const Robot                                                = require('../robot');
-const Adapter                                              = require('../adapter');
-const {TextMessage,EnterMessage,LeaveMessage,TopicMessage} = require('../message');
+const Robot = require('../robot');
+const Adapter = require('../adapter');
+const {
+  TextMessage, EnterMessage, LeaveMessage, TopicMessage,
+} = require('../message');
 
 class Campfire extends Adapter {
   send(envelope, ...strings) {
     if (strings.length > 0) {
       const string = strings.shift();
-      if (typeof(string) === 'function') {
+      if (typeof (string) === 'function') {
         string();
         return this.send(envelope, ...Array.from(strings));
-      } else {
-        return this.bot.Room(envelope.room).speak(string, (err, data) => {
-          if (err != null) { this.robot.logger.error(`Campfire send error: ${err}`); }
-          return this.send(envelope, ...Array.from(strings));
-        });
       }
+      return this.bot.Room(envelope.room).speak(string, (err, data) => {
+        if (err != null) { this.robot.logger.error(`Campfire send error: ${err}`); }
+        return this.send(envelope, ...Array.from(strings));
+      });
     }
   }
 
   emote(envelope, ...strings) {
-    return this.send(envelope, ...Array.from(strings.map(str => `*${str}*`)));
+    return this.send(envelope, ...Array.from(strings.map((str) => `*${str}*`)));
   }
 
   reply(envelope, ...strings) {
-    return this.send(envelope, ...Array.from(strings.map(str => `${envelope.user.name}: ${str}`)));
+    return this.send(envelope, ...Array.from(strings.map((str) => `${envelope.user.name}: ${str}`)));
   }
 
   topic(envelope, ...strings) {
-    return this.bot.Room(envelope.room).topic(strings.join(" / "), (err, data) => {
+    return this.bot.Room(envelope.room).topic(strings.join(' / '), (err, data) => {
       if (err != null) { return this.robot.logger.error(`Campfire topic error: ${err}`); }
     });
   }
@@ -54,30 +75,28 @@ class Campfire extends Adapter {
   locked(envelope, ...strings) {
     if (envelope.message.private) {
       return this.send(envelope, ...Array.from(strings));
-    } else {
-      return this.bot.Room(envelope.room).lock((...args) => {
-        strings.push(() => {
-          // campfire won't send messages from just before a room unlock. 3000
-          // is the 3-second poll.
-          return setTimeout((() => this.bot.Room(envelope.room).unlock()), 3000);
-        });
-        return this.send(envelope, ...Array.from(strings));
-      });
     }
+    return this.bot.Room(envelope.room).lock((...args) => {
+      strings.push(() =>
+      // campfire won't send messages from just before a room unlock. 3000
+      // is the 3-second poll.
+        setTimeout((() => this.bot.Room(envelope.room).unlock()), 3000));
+      return this.send(envelope, ...Array.from(strings));
+    });
   }
 
   run() {
     const self = this;
 
     const options = {
-      token:   process.env.HUBOT_CAMPFIRE_TOKEN,
-      rooms:   process.env.HUBOT_CAMPFIRE_ROOMS,
-      account: process.env.HUBOT_CAMPFIRE_ACCOUNT
+      token: process.env.HUBOT_CAMPFIRE_TOKEN,
+      rooms: process.env.HUBOT_CAMPFIRE_ROOMS,
+      account: process.env.HUBOT_CAMPFIRE_ACCOUNT,
     };
 
     const bot = new CampfireStreaming(options, this.robot);
 
-    const withAuthor = callback => (id, created, room, user, body) => bot.User(user, function(err, userData) {
+    const withAuthor = (callback) => (id, created, room, user, body) => bot.User(user, (err, userData) => {
       if (userData.user) {
         const author = self.robot.brain.userForId(userData.user.id, userData.user);
         const userId = userData.user.id;
@@ -90,92 +109,86 @@ class Campfire extends Adapter {
       }
     });
 
-    bot.on("TextMessage",
-      withAuthor(function(id, created, room, user, body, author) {
+    bot.on('TextMessage',
+      withAuthor((id, created, room, user, body, author) => {
         if (bot.info.id !== author.id) {
           const message = new TextMessage(author, body, id);
           message.private = bot.private[room];
           return self.receive(message);
         }
-      })
-    );
+      }));
 
-    bot.on("EnterMessage",
-      withAuthor(function(id, created, room, user, body, author) {
+    bot.on('EnterMessage',
+      withAuthor((id, created, room, user, body, author) => {
         if (bot.info.id !== author.id) {
           return self.receive(new EnterMessage(author, null, id));
         }
-      })
-    );
+      }));
 
-    bot.on("LeaveMessage",
-      withAuthor(function(id, created, room, user, body, author) {
+    bot.on('LeaveMessage',
+      withAuthor((id, created, room, user, body, author) => {
         if (bot.info.id !== author.id) {
           return self.receive(new LeaveMessage(author, null, id));
         }
-      })
-    );
+      }));
 
-    bot.on("TopicChangeMessage",
-      withAuthor(function(id, created, room, user, body, author) {
+    bot.on('TopicChangeMessage',
+      withAuthor((id, created, room, user, body, author) => {
         if (bot.info.id !== author.id) {
           return self.receive(new TopicMessage(author, body, id));
         }
-      })
-    );
+      }));
 
-    bot.on("LockMessage",
-      withAuthor((id, created, room, user, body, author) => bot.private[room] = true)
-    );
+    bot.on('LockMessage',
+      withAuthor((id, created, room, user, body, author) => bot.private[room] = true));
 
-    bot.on("UnlockMessage",
-      withAuthor((id, created, room, user, body, author) => bot.private[room] = false)
-    );
+    bot.on('UnlockMessage',
+      withAuthor((id, created, room, user, body, author) => bot.private[room] = false));
 
-    bot.Me(function(err, data) {
+    bot.Me((err, data) => {
       bot.info = data.user;
       bot.name = bot.info.name;
 
-      return Array.from(bot.rooms).map((roomId) =>
-        ((roomId => bot.Room(roomId).join((err, callback) => bot.Room(roomId).listen())))(roomId));
+      return Array.from(bot.rooms).map((roomId) => (((roomId) => bot.Room(roomId).join((err, callback) => bot.Room(roomId).listen())))(roomId));
     });
 
-    bot.on("reconnect", roomId => bot.Room(roomId).join((err, callback) => bot.Room(roomId).listen()));
+    bot.on('reconnect', (roomId) => bot.Room(roomId).join((err, callback) => bot.Room(roomId).listen()));
 
     this.bot = bot;
 
-    return self.emit("connected");
+    return self.emit('connected');
   }
 }
 
-exports.use = robot => new Campfire(robot);
+exports.use = (robot) => new Campfire(robot);
 
 class CampfireStreaming extends EventEmitter {
   constructor(options, robot) {
     {
       // Hack: trick Babel/TypeScript into allowing this before super.
       if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
+      const thisFn = (() => this).toString();
+      const thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
       eval(`${thisName} = this;`);
     }
     this.robot = robot;
     if ((options.token == null) || (options.rooms == null) || (options.account == null)) {
-      this.robot.logger.error( 
-        "Not enough parameters provided. I need a token, rooms and account");
+      this.robot.logger.error(
+        'Not enough parameters provided. I need a token, rooms and account',
+      );
       process.exit(1);
     }
 
-    this.token         = options.token;
-    this.rooms         = options.rooms.split(",");
-    this.account       = options.account;
-    this.host          = this.account + ".campfirenow.com";
-    this.authorization = "Basic " + new Buffer(`${this.token}:x`).toString("base64");
-    this.private       = {};
+    this.token = options.token;
+    this.rooms = options.rooms.split(',');
+    this.account = options.account;
+    this.host = `${this.account}.campfirenow.com`;
+    this.authorization = `Basic ${new Buffer(`${this.token}:x`).toString('base64')}`;
+    this.private = {};
   }
 
   Rooms(callback) {
-    return this.get("/rooms", callback);
+    return this.get('/rooms', callback);
   }
 
   User(id, callback) {
@@ -183,13 +196,13 @@ class CampfireStreaming extends EventEmitter {
   }
 
   Me(callback) {
-    return this.get("/users/me", callback);
+    return this.get('/users/me', callback);
   }
 
   Room(id) {
     const self = this;
     const {
-      logger
+      logger,
     } = this.robot;
 
     return {
@@ -198,74 +211,73 @@ class CampfireStreaming extends EventEmitter {
       },
 
       join(callback) {
-        return self.post(`/room/${id}/join`, "", callback);
+        return self.post(`/room/${id}/join`, '', callback);
       },
 
       leave(callback) {
-        return self.post(`/room/${id}/leave`, "", callback);
+        return self.post(`/room/${id}/leave`, '', callback);
       },
 
       lock(callback) {
-        return self.post(`/room/${id}/lock`, "", callback);
+        return self.post(`/room/${id}/lock`, '', callback);
       },
 
       unlock(callback) {
-        return self.post(`/room/${id}/unlock`, "", callback);
+        return self.post(`/room/${id}/unlock`, '', callback);
       },
 
       // say things to this channel on behalf of the token user
       paste(text, callback) {
-        return this.message(text, "PasteMessage", callback);
+        return this.message(text, 'PasteMessage', callback);
       },
 
       topic(text, callback) {
-        const body = {room: {topic: text}};
+        const body = { room: { topic: text } };
         return self.put(`/room/${id}`, body, callback);
       },
 
       sound(text, callback) {
-        return this.message(text, "SoundMessage", callback);
+        return this.message(text, 'SoundMessage', callback);
       },
 
       speak(text, callback) {
-        const body = { message: { "body":text } };
+        const body = { message: { body: text } };
         return self.post(`/room/${id}/speak`, body, callback);
       },
 
       message(text, type, callback) {
-        const body = { message: { "body":text, "type":type } };
+        const body = { message: { body: text, type } };
         return self.post(`/room/${id}/speak`, body, callback);
       },
 
       // listen for activity in channels
       listen() {
         const headers = {
-          "Host"          : "streaming.campfirenow.com",
-          "Authorization" : self.authorization,
-          "User-Agent"    : `Hubot/${(this.robot != null ? this.robot.version : undefined)} (${(this.robot != null ? this.robot.name : undefined)})`
+          Host: 'streaming.campfirenow.com',
+          Authorization: self.authorization,
+          'User-Agent': `Hubot/${(this.robot != null ? this.robot.version : undefined)} (${(this.robot != null ? this.robot.name : undefined)})`,
         };
 
         const options = {
-          "agent"  : false,
-          "host"   : "streaming.campfirenow.com",
-          "port"   : 443,
-          "path"   : `/room/${id}/live.json`,
-          "method" : "GET",
-          "headers": headers
+          agent: false,
+          host: 'streaming.campfirenow.com',
+          port: 443,
+          path: `/room/${id}/live.json`,
+          method: 'GET',
+          headers,
         };
 
-        const request = HTTPS.request(options, function(response) {
-          response.setEncoding("utf8");
+        const request = HTTPS.request(options, (response) => {
+          response.setEncoding('utf8');
 
           let buf = '';
 
-          response.on("data", function(chunk) {
+          response.on('data', (chunk) => {
             if (chunk === ' ') {
               // campfire api sends a ' ' heartbeat every 3s
 
             } else if (chunk.match(/^\s*Access Denied/)) {
               return logger.error(`Campfire error on room ${id}: ${chunk}`);
-
             } else {
               // api uses newline terminated json payloads
               // buffer across tcp packets and parse out lines
@@ -274,7 +286,7 @@ class CampfireStreaming extends EventEmitter {
               return (() => {
                 let offset;
                 const result = [];
-                while ((offset = buf.indexOf("\r")) > -1) {
+                while ((offset = buf.indexOf('\r')) > -1) {
                   const part = buf.substr(0, offset);
                   buf = buf.substr(offset + 1);
 
@@ -287,7 +299,7 @@ class CampfireStreaming extends EventEmitter {
                         data.created_at,
                         data.room_id,
                         data.user_id,
-                        data.body
+                        data.body,
                       ));
                     } catch (error) {
                       result.push(logger.error(`Campfire data error: ${error}\n${error.stack}`));
@@ -301,74 +313,74 @@ class CampfireStreaming extends EventEmitter {
             }
           });
 
-          response.on("end", function() {
+          response.on('end', () => {
             logger.error(`Streaming connection closed for room ${id}. :(`);
-            return setTimeout(() => self.emit("reconnect", id)
-            , 5000);
+            return setTimeout(() => self.emit('reconnect', id),
+              5000);
           });
 
-          return response.on("error", err => logger.error(`Campfire listen response error: ${err}`));
+          return response.on('error', (err) => logger.error(`Campfire listen response error: ${err}`));
         });
 
-        request.on("error", err => logger.error(`Campfire listen request error: ${err}`));
+        request.on('error', (err) => logger.error(`Campfire listen request error: ${err}`));
 
         return request.end();
-      }
+      },
     };
   }
 
   get(path, callback) {
-    return this.request("GET", path, null, callback);
+    return this.request('GET', path, null, callback);
   }
 
   post(path, body, callback) {
-    return this.request("POST", path, body, callback);
+    return this.request('POST', path, body, callback);
   }
 
   put(path, body, callback) {
-    return this.request("PUT", path, body, callback);
+    return this.request('PUT', path, body, callback);
   }
 
   request(method, path, body, callback) {
     const {
-      logger
+      logger,
     } = this.robot;
 
     const headers = {
-      "Authorization" : this.authorization,
-      "Host"          : this.host,
-      "Content-Type"  : "application/json",
-      "User-Agent"    : `Hubot/${(this.robot != null ? this.robot.version : undefined)} (${(this.robot != null ? this.robot.name : undefined)})`
+      Authorization: this.authorization,
+      Host: this.host,
+      'Content-Type': 'application/json',
+      'User-Agent': `Hubot/${(this.robot != null ? this.robot.version : undefined)} (${(this.robot != null ? this.robot.name : undefined)})`,
     };
 
     const options = {
-      "agent"  : false,
-      "host"   : this.host,
-      "port"   : 443,
-      "path"   : path,
-      "method" : method,
-      "headers": headers
+      agent: false,
+      host: this.host,
+      port: 443,
+      path,
+      method,
+      headers,
     };
 
-    if ((method === "POST") || (method === "PUT")) {
-      if (typeof(body) !== "string") {
+    if ((method === 'POST') || (method === 'PUT')) {
+      if (typeof (body) !== 'string') {
         body = JSON.stringify(body);
       }
 
       body = new Buffer(body);
-      options.headers["Content-Length"] = body.length;
+      options.headers['Content-Length'] = body.length;
     }
 
-    const request = HTTPS.request(options, function(response) {
-      let data = "";
+    const request = HTTPS.request(options, (response) => {
+      let data = '';
 
-      response.on("data", chunk => data += chunk);
+      response.on('data', (chunk) => data += chunk);
 
-      response.on("end", function() {
+      response.on('end', () => {
         if (response.statusCode >= 400) {
           switch (response.statusCode) {
             case 401:
-              throw new Error("Invalid access token provided");
+              throw new Error('Invalid access token provided');
               break;
             default:
               logger.error(`Campfire HTTPS status code: ${response.statusCode}`);
@@ -383,20 +395,20 @@ class CampfireStreaming extends EventEmitter {
             return callback(null, data || { });
           }
         }
-    });
+      });
 
-      return response.on("error", function(err) {
+      return response.on('error', (err) => {
         logger.error(`Campfire HTTPS response error: ${err}`);
         return callback(err, { });
+      });
     });
-  });
 
-    if ((method === "POST") || (method === "PUT")) {
+    if ((method === 'POST') || (method === 'PUT')) {
       request.end(body, 'binary');
     } else {
       request.end();
     }
 
-    return request.on("error", err => logger.error(`Campfire request error: ${err}`));
+    return request.on('error', (err) => logger.error(`Campfire request error: ${err}`));
   }
 }

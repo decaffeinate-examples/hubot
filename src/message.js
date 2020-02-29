@@ -1,3 +1,14 @@
+/* eslint-disable
+    constructor-super,
+    max-classes-per-file,
+    no-constant-condition,
+    no-eval,
+    no-param-reassign,
+    no-return-assign,
+    no-this-before-super,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS001: Remove Babel/TypeScript constructor workaround
@@ -34,8 +45,8 @@ class TextMessage extends Message {
     {
       // Hack: trick Babel/TypeScript into allowing this before super.
       if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
+      const thisFn = (() => this).toString();
+      const thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
       eval(`${thisName} = this;`);
     }
     this.user = user;
@@ -52,7 +63,7 @@ class TextMessage extends Message {
   match(regex) {
     return this.text.match(regex);
   }
-  
+
   // String representation of a TextMessage
   //
   // Returns the message text
@@ -90,8 +101,8 @@ class CatchAllMessage extends Message {
     {
       // Hack: trick Babel/TypeScript into allowing this before super.
       if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
+      const thisFn = (() => this).toString();
+      const thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
       eval(`${thisName} = this;`);
     }
     this.message = message;
@@ -105,5 +116,5 @@ module.exports = {
   EnterMessage,
   LeaveMessage,
   TopicMessage,
-  CatchAllMessage
+  CatchAllMessage,
 };

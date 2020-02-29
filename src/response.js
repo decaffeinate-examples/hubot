@@ -1,3 +1,9 @@
+/* eslint-disable
+    class-methods-use-this,
+    func-names,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -20,7 +26,7 @@ class Response {
     this.envelope = {
       room: this.message.room,
       user: this.message.user,
-      message: this.message
+      message: this.message,
     };
   }
 
@@ -31,7 +37,7 @@ class Response {
   //
   // Returns nothing.
   send(...strings) {
-    return this.runWithMiddleware("send", { plaintext: true }, ...Array.from(strings));
+    return this.runWithMiddleware('send', { plaintext: true }, ...Array.from(strings));
   }
 
   // Public: Posts an emote back to the chat source
@@ -41,7 +47,7 @@ class Response {
   //
   // Returns nothing.
   emote(...strings) {
-    return this.runWithMiddleware("emote", { plaintext: true }, ...Array.from(strings));
+    return this.runWithMiddleware('emote', { plaintext: true }, ...Array.from(strings));
   }
 
   // Public: Posts a message mentioning the current user.
@@ -51,7 +57,7 @@ class Response {
   //
   // Returns nothing.
   reply(...strings) {
-    return this.runWithMiddleware("reply", { plaintext: true }, ...Array.from(strings));
+    return this.runWithMiddleware('reply', { plaintext: true }, ...Array.from(strings));
   }
 
   // Public: Posts a topic changing message
@@ -61,7 +67,7 @@ class Response {
   //
   // Returns nothing.
   topic(...strings) {
-    return this.runWithMiddleware("topic", { plaintext: true }, ...Array.from(strings));
+    return this.runWithMiddleware('topic', { plaintext: true }, ...Array.from(strings));
   }
 
   // Public: Play a sound in the chat source
@@ -71,7 +77,7 @@ class Response {
   //
   // Returns nothing
   play(...strings) {
-    return this.runWithMiddleware("play", ...Array.from(strings));
+    return this.runWithMiddleware('play', ...Array.from(strings));
   }
 
   // Public: Posts a message in an unlogged room
@@ -81,20 +87,20 @@ class Response {
   //
   // Returns nothing
   locked(...strings) {
-    return this.runWithMiddleware("locked", { plaintext: true }, ...Array.from(strings));
+    return this.runWithMiddleware('locked', { plaintext: true }, ...Array.from(strings));
   }
 
   // Private: Call with a method for the given strings using response
   // middleware.
   runWithMiddleware(methodName, opts, ...strings) {
-    let callback = undefined;
+    let callback;
     const copy = strings.slice(0);
-    if (typeof(copy[copy.length - 1]) === 'function') {
+    if (typeof (copy[copy.length - 1]) === 'function') {
       callback = copy.pop();
     }
-    const context = {response: this, strings: copy, method: methodName};
+    const context = { response: this, strings: copy, method: methodName };
     if (opts.plaintext != null) { context.plaintext = true; }
-    const responseMiddlewareDone = function() {};
+    const responseMiddlewareDone = function () {};
     const runAdapterSend = (_, done) => {
       const result = context.strings;
       if (callback != null) { result.push(callback); }
@@ -102,8 +108,8 @@ class Response {
       return done();
     };
     return this.robot.middleware.response.execute(context,
-                                       runAdapterSend,
-                                       responseMiddlewareDone);
+      runAdapterSend,
+      responseMiddlewareDone);
   }
 
   // Public: Picks a random item from the given items.
@@ -112,7 +118,7 @@ class Response {
   //
   // Returns a random item.
   random(items) {
-    return items[ Math.floor(Math.random() * items.length) ];
+    return items[Math.floor(Math.random() * items.length)];
   }
 
   // Public: Tell the message to stop dispatching to listeners

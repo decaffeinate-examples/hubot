@@ -1,3 +1,13 @@
+/* eslint-disable
+    class-methods-use-this,
+    constructor-super,
+    no-constant-condition,
+    no-eval,
+    no-this-before-super,
+    no-unused-vars,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS001: Remove Babel/TypeScript constructor workaround
@@ -5,7 +15,7 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const {EventEmitter} = require('events');
+const { EventEmitter } = require('events');
 
 class Adapter extends EventEmitter {
   // An adapter is a specific interface to a chat source for robots.
@@ -15,8 +25,8 @@ class Adapter extends EventEmitter {
     {
       // Hack: trick Babel/TypeScript into allowing this before super.
       if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
+      const thisFn = (() => this).toString();
+      const thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
       eval(`${thisName} = this;`);
     }
     this.robot = robot;

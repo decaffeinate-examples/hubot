@@ -1,3 +1,13 @@
+/* eslint-disable
+    func-names,
+    import/no-unresolved,
+    no-return-assign,
+    no-undef,
+    no-unused-expressions,
+    no-unused-vars,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -12,29 +22,31 @@ const { expect } = chai;
 
 // Hubot classes
 const User = require('../src/user');
-const { CatchAllMessage, EnterMessage, Message, TextMessage } = require('../src/message');
+const {
+  CatchAllMessage, EnterMessage, Message, TextMessage,
+} = require('../src/message');
 
-describe('Message', function() {
-  beforeEach(function() {
+describe('Message', () => {
+  beforeEach(function () {
     return this.user = new User({
       id: 1,
       name: 'hubottester',
-      room: '#mocha'
+      room: '#mocha',
     });
   });
 
-  return describe('Unit Tests', function() {
-    describe('#finish', () => it('marks the message as done', function() {
+  return describe('Unit Tests', () => {
+    describe('#finish', () => it('marks the message as done', function () {
       const testMessage = new Message(this.user);
       expect(testMessage.done).to.not.be.ok;
       testMessage.finish();
       return expect(testMessage.done).to.be.ok;
     }));
 
-    return describe('TextMessage', () => describe('#match', () => it('should perform standard regex matching', function() {
+    return describe('TextMessage', () => describe('#match', () => it('should perform standard regex matching', function () {
       const testMessage = new TextMessage(this.user, 'message123');
-      expect( testMessage.match(/^message123$/) ).to.be.ok;
-      return expect( testMessage.match(/^does-not-match$/) ).to.not.be.ok;
+      expect(testMessage.match(/^message123$/)).to.be.ok;
+      return expect(testMessage.match(/^does-not-match$/)).to.not.be.ok;
     })));
   });
 });

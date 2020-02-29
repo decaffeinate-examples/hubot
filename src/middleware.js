@@ -1,3 +1,10 @@
+/* eslint-disable
+    func-names,
+    import/no-unresolved,
+    no-param-reassign,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -10,7 +17,7 @@ const async = require('async');
 class Middleware {
   static initClass() {
     // We use this recursively, and using nextTick recursively is deprecated in node 0.10.
-    this.ticker = typeof setImmediate === "function" ? setImmediate : process.nextTick;
+    this.ticker = typeof setImmediate === 'function' ? setImmediate : process.nextTick;
   }
 
   constructor(robot) {
@@ -35,13 +42,13 @@ class Middleware {
   // Returns nothing
   // Returns before executing any middleware
   execute(context, next, done) {
-    if (done == null) { done = function() {}; }
+    if (done == null) { done = function () {}; }
     // Execute a single piece of middleware and update the completion callback
     // (each piece of middleware can wrap the 'done' callback with additional
     // logic).
     const executeSingleMiddleware = (doneFunc, middlewareFunc, cb) => {
       // Match the async.reduce interface
-      const nextFunc = newDoneFunc => cb(null, newDoneFunc || doneFunc);
+      const nextFunc = (newDoneFunc) => cb(null, newDoneFunc || doneFunc);
       // Catch errors in synchronous middleware
       try {
         return middlewareFunc.call(undefined, context, nextFunc, doneFunc);
@@ -58,9 +65,7 @@ class Middleware {
 
     // Execute each piece of middleware, collecting the latest 'done' callback
     // at each step.
-    return process.nextTick(() => {
-      return async.reduce(this.stack, done, executeSingleMiddleware, allDone);
-    });
+    return process.nextTick(() => async.reduce(this.stack, done, executeSingleMiddleware, allDone));
   }
 
   // Public: Registers new middleware

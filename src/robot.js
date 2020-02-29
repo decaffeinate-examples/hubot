@@ -1,3 +1,21 @@
+/* eslint-disable
+    class-methods-use-this,
+    consistent-return,
+    global-require,
+    guard-for-in,
+    implicit-arrow-linebreak,
+    import/no-dynamic-require,
+    import/no-unresolved,
+    max-len,
+    no-continue,
+    no-param-reassign,
+    no-restricted-syntax,
+    no-return-assign,
+    no-unused-vars,
+    radix,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -7,23 +25,25 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const Fs             = require('fs');
-const Log            = require('log');
-const Path           = require('path');
-const HttpClient     = require('scoped-http-client');
-const {EventEmitter} = require('events');
-const async          = require('async');
+const Fs = require('fs');
+const Log = require('log');
+const Path = require('path');
+const HttpClient = require('scoped-http-client');
+const { EventEmitter } = require('events');
+const async = require('async');
 
 const User = require('./user');
 const Brain = require('./brain');
 const Response = require('./response');
-const {Listener,TextListener} = require('./listener');
-const {EnterMessage,LeaveMessage,TopicMessage,CatchAllMessage} = require('./message');
+const { Listener, TextListener } = require('./listener');
+const {
+  EnterMessage, LeaveMessage, TopicMessage, CatchAllMessage,
+} = require('./message');
 const Middleware = require('./middleware');
 
 const HUBOT_DEFAULT_ADAPTERS = [
   'campfire',
-  'shell'
+  'shell',
 ];
 
 const HUBOT_DOCUMENTATION_SECTIONS = [
@@ -36,7 +56,7 @@ const HUBOT_DOCUMENTATION_SECTIONS = [
   'authors',
   'examples',
   'tags',
-  'urls'
+  'urls',
 ];
 
 class Robot {
@@ -52,22 +72,22 @@ class Robot {
   constructor(adapterPath, adapter, httpd, name, alias) {
     if (name == null) { name = 'Hubot'; }
     if (alias == null) { alias = false; }
-    if (this.adapterPath == null) { this.adapterPath = Path.join(__dirname, "adapters"); }
+    if (this.adapterPath == null) { this.adapterPath = Path.join(__dirname, 'adapters'); }
 
-    this.name       = name;
-    this.events     = new EventEmitter;
-    this.brain      = new Brain(this);
-    this.alias      = alias;
-    this.adapter    = null;
-    this.Response   = Response;
-    this.commands   = [];
-    this.listeners  = [];
+    this.name = name;
+    this.events = new EventEmitter();
+    this.brain = new Brain(this);
+    this.alias = alias;
+    this.adapter = null;
+    this.Response = Response;
+    this.commands = [];
+    this.listeners = [];
     this.middleware = {
       listener: new Middleware(this),
       response: new Middleware(this),
-      receive:  new Middleware(this)
+      receive: new Middleware(this),
     };
-    this.logger     = new Log(process.env.HUBOT_LOG_LEVEL || 'info');
+    this.logger = new Log(process.env.HUBOT_LOG_LEVEL || 'info');
     this.pingIntervalId = null;
     this.globalHttpOptions = {};
 
@@ -80,15 +100,11 @@ class Robot {
 
     this.loadAdapter(adapter);
 
-    this.adapterName   = adapter;
+    this.adapterName = adapter;
     this.errorHandlers = [];
 
-    this.on('error', (err, res) => {
-      return this.invokeErrorHandlers(err, res);
-    });
-    this.onUncaughtException = err => {
-      return this.emit('error', err);
-    };
+    this.on('error', (err, res) => this.invokeErrorHandlers(err, res));
+    this.onUncaughtException = (err) => this.emit('error', err);
     process.on('uncaughtException', this.onUncaughtException);
   }
 
@@ -148,8 +164,9 @@ class Robot {
     const modifiers = re.pop();
 
     if (re[0] && (re[0][0] === '^')) {
-      this.logger.warning( 
-        "Anchors don't work well with respond, perhaps you want to use 'hear'");
+      this.logger.warning(
+        "Anchors don't work well with respond, perhaps you want to use 'hear'",
+      );
       this.logger.warning(`The regex in question was ${regex.toString()}`);
     }
 
@@ -158,15 +175,15 @@ class Robot {
 
     if (this.alias) {
       const alias = this.alias.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      const [a,b] = Array.from(name.length > alias.length ? [name,alias] : [alias,name]);
+      const [a, b] = Array.from(name.length > alias.length ? [name, alias] : [alias, name]);
       newRegex = new RegExp(
         `^\\s*[@]?(?:${a}[:,]?|${b}[:,]?)\\s*(?:${pattern})`,
-        modifiers
+        modifiers,
       );
     } else {
       newRegex = new RegExp(
         `^\\s*[@]?${name}[:,]?\\s*(?:${pattern})`,
-        modifiers
+        modifiers,
       );
     }
 
@@ -182,9 +199,9 @@ class Robot {
   // Returns nothing.
   enter(options, callback) {
     return this.listen(
-      (msg => msg instanceof EnterMessage),
+      ((msg) => msg instanceof EnterMessage),
       options,
-      callback
+      callback,
     );
   }
 
@@ -197,9 +214,9 @@ class Robot {
   // Returns nothing.
   leave(options, callback) {
     return this.listen(
-      (msg => msg instanceof LeaveMessage),
+      ((msg) => msg instanceof LeaveMessage),
       options,
-      callback
+      callback,
     );
   }
 
@@ -212,9 +229,9 @@ class Robot {
   // Returns nothing.
   topic(options, callback) {
     return this.listen(
-      (msg => msg instanceof TopicMessage),
+      ((msg) => msg instanceof TopicMessage),
       options,
-      callback
+      callback,
     );
   }
 
@@ -237,12 +254,13 @@ class Robot {
   // Returns nothing.
   invokeErrorHandlers(err, res) {
     this.logger.error(err.stack);
-    return Array.from(this.errorHandlers).map((errorHandler) =>
-     (() => { try {
-       return errorHandler(err, res);
-     } catch (errErr) {
-       return this.logger.error(`while invoking error handler: ${errErr}\n${errErr.stack}`);
-     } })());
+    return Array.from(this.errorHandlers).map((errorHandler) => (() => {
+      try {
+        return errorHandler(err, res);
+      } catch (errErr) {
+        return this.logger.error(`while invoking error handler: ${errErr}\n${errErr.stack}`);
+      }
+    })());
   }
 
   // Public: Adds a Listener that triggers when no other text matchers match.
@@ -261,9 +279,9 @@ class Robot {
     }
 
     return this.listen(
-      (msg => msg instanceof CatchAllMessage),
+      ((msg) => msg instanceof CatchAllMessage),
       options,
-      (function(msg) { msg.message = msg.message.message; return callback(msg); })
+      ((msg) => { msg.message = msg.message.message; return callback(msg); }),
     );
   }
 
@@ -329,9 +347,9 @@ class Robot {
     // When everything is finished (down the middleware stack and back up),
     // pass control back to the robot
     return this.middleware.receive.execute(
-      {response: new Response(this, message)},
+      { response: new Response(this, message) },
       this.processListeners.bind(this),
-      cb
+      cb,
     );
   }
 
@@ -352,30 +370,28 @@ class Robot {
       this.listeners,
       (listener, cb) => {
         try {
-          return listener.call(context.response.message, this.middleware.listener, function(listenerExecuted) {
+          return listener.call(context.response.message, this.middleware.listener, (listenerExecuted) => {
             anyListenersExecuted = anyListenersExecuted || listenerExecuted;
             // Defer to the event loop at least after every listener so the
             // stack doesn't get too big
             return Middleware.ticker(() => // Stop processing when message.done == true
-            cb(context.response.message.done));
+              cb(context.response.message.done));
           });
         } catch (err) {
           this.emit('error', err, new this.Response(this, context.response.message, []));
           // Continue to next listener when there is an error
           return cb(false);
         }
-      }
-      ,
+      },
       // Ignore the result ( == the listener that set message.done = true)
-      _ => {
+      (_) => {
         // If no registered Listener matched the message
         if (!(context.response.message instanceof CatchAllMessage) && !anyListenersExecuted) {
           this.logger.debug('No listeners executed; falling back to catch-all');
           return this.receive(new CatchAllMessage(context.response.message), done);
-        } else {
-          if (done != null) { return process.nextTick(done); }
-        }
-    });
+        } if (done != null) { return process.nextTick(done); }
+      },
+    );
     return undefined;
   }
 
@@ -387,7 +403,7 @@ class Robot {
   //
   // Returns nothing.
   loadFile(path, file) {
-    const ext  = Path.extname(file);
+    const ext = Path.extname(file);
     const full = Path.join(path, Path.basename(file, ext));
     if (require.extensions[ext]) {
       try {
@@ -396,10 +412,8 @@ class Robot {
         if (typeof script === 'function') {
           script(this);
           return this.parseHelp(Path.join(path, file));
-        } else {
-          return this.logger.warning(`Expected ${full} to assign a function to module.exports, got ${typeof script}`);
         }
-
+        return this.logger.warning(`Expected ${full} to assign a function to module.exports, got ${typeof script}`);
       } catch (error) {
         this.logger.error(`Unable to load ${full}: ${error.stack}`);
         return process.exit(1);
@@ -416,8 +430,7 @@ class Robot {
     this.logger.debug(`Loading scripts from ${path}`);
 
     if (Fs.existsSync(path)) {
-      return Array.from(Fs.readdirSync(path).sort()).map((file) =>
-        this.loadFile(path, file));
+      return Array.from(Fs.readdirSync(path).sort()).map((file) => this.loadFile(path, file));
     }
   }
 
@@ -429,8 +442,7 @@ class Robot {
   // Returns nothing.
   loadHubotScripts(path, scripts) {
     this.logger.debug(`Loading hubot-scripts from ${path}`);
-    return Array.from(scripts).map((script) =>
-      this.loadFile(path, script));
+    return Array.from(scripts).map((script) => this.loadFile(path, script));
   }
 
   // Public: Load scripts from packages specified in the
@@ -440,26 +452,25 @@ class Robot {
   //
   // Returns nothing.
   loadExternalScripts(packages) {
-    this.logger.debug("Loading external-scripts from npm packages");
+    this.logger.debug('Loading external-scripts from npm packages');
     try {
       if (packages instanceof Array) {
         return (() => {
           const result = [];
-          for (let pkg of Array.from(packages)) {
+          for (const pkg of Array.from(packages)) {
             result.push(require(pkg)(this));
           }
           return result;
         })();
-      } else {
-        return (() => {
-          const result1 = [];
-          for (let pkg in packages) {
-            const scripts = packages[pkg];
-            result1.push(require(pkg)(this, scripts));
-          }
-          return result1;
-        })();
       }
+      return (() => {
+        const result1 = [];
+        for (const pkg in packages) {
+          const scripts = packages[pkg];
+          result1.push(require(pkg)(this, scripts));
+        }
+        return result1;
+      })();
     } catch (err) {
       this.logger.error(`Error loading scripts from npm package - ${err.stack}`);
       return process.exit(1);
@@ -470,12 +481,12 @@ class Robot {
   //
   // Returns nothing.
   setupExpress() {
-    const user       = process.env.EXPRESS_USER;
-    const pass       = process.env.EXPRESS_PASSWORD;
-    const stat       = process.env.EXPRESS_STATIC;
-    const port       = process.env.EXPRESS_PORT || process.env.PORT || 8080;
-    const address    = process.env.EXPRESS_BIND_ADDRESS || process.env.BIND_ADDRESS || '0.0.0.0';
-    const limit      = process.env.EXPRESS_LIMIT || '100kb';
+    const user = process.env.EXPRESS_USER;
+    const pass = process.env.EXPRESS_PASSWORD;
+    const stat = process.env.EXPRESS_STATIC;
+    const port = process.env.EXPRESS_PORT || process.env.PORT || 8080;
+    const address = process.env.EXPRESS_BIND_ADDRESS || process.env.BIND_ADDRESS || '0.0.0.0';
+    const limit = process.env.EXPRESS_LIMIT || '100kb';
     const paramLimit = parseInt(process.env.EXPRESS_PARAMETER_LIMIT) || 1000;
 
     const express = require('express');
@@ -484,7 +495,7 @@ class Robot {
     const app = express();
 
     app.use((req, res, next) => {
-      res.setHeader("X-Powered-By", `hubot/${this.name}`);
+      res.setHeader('X-Powered-By', `hubot/${this.name}`);
       return next();
     });
 
@@ -492,10 +503,10 @@ class Robot {
     app.use(express.query());
 
     app.use(express.json());
-    app.use(express.urlencoded({limit, parameterLimit: paramLimit}));
+    app.use(express.urlencoded({ limit, parameterLimit: paramLimit }));
     // replacement for deprecated express.multipart/connect.multipart
     // limit to 100mb, as per the old behavior
-    app.use(multipart({maxFilesSize: 100 * 1024 * 1024}));
+    app.use(multipart({ maxFilesSize: 100 * 1024 * 1024 }));
 
     if (stat) { app.use(express.static(stat)); }
 
@@ -512,12 +523,8 @@ class Robot {
 
     if (herokuUrl) {
       if (!/\/$/.test(herokuUrl)) { herokuUrl += '/'; }
-      return this.pingIntervalId = setInterval(() => {
-        return HttpClient.create(`${herokuUrl}hubot/ping`).post()((err, res, body) => {
-          return this.logger.info('keep alive ping!');
-        });
-      }
-      , 5 * 60 * 1000);
+      return this.pingIntervalId = setInterval(() => HttpClient.create(`${herokuUrl}hubot/ping`).post()((err, res, body) => this.logger.info('keep alive ping!')),
+        5 * 60 * 1000);
     }
   }
 
@@ -525,12 +532,12 @@ class Robot {
   //
   // returns nothing
   setupNullRouter() {
-    const msg = "A script has tried registering a HTTP route while the HTTP server is disabled with --disabled-httpd.";
+    const msg = 'A script has tried registering a HTTP route while the HTTP server is disabled with --disabled-httpd.';
     return this.router = {
-      get: ()=> this.logger.warning(msg),
-      post: ()=> this.logger.warning(msg),
-      put: ()=> this.logger.warning(msg),
-      delete: ()=> this.logger.warning(msg)
+      get: () => this.logger.warning(msg),
+      post: () => this.logger.warning(msg),
+      put: () => this.logger.warning(msg),
+      delete: () => this.logger.warning(msg),
     };
   }
 
@@ -545,10 +552,9 @@ class Robot {
     this.logger.debug(`Loading adapter ${adapter}`);
 
     try {
-      const path = Array.from(HUBOT_DEFAULT_ADAPTERS).includes(adapter) ?
-        `${this.adapterPath}/${adapter}`
-      :
-        `hubot-${adapter}`;
+      const path = Array.from(HUBOT_DEFAULT_ADAPTERS).includes(adapter)
+        ? `${this.adapterPath}/${adapter}`
+        : `hubot-${adapter}`;
 
       return this.adapter = require(path).use(this);
     } catch (err) {
@@ -570,7 +576,8 @@ class Robot {
   //
   // Returns nothing.
   parseHelp(path) {
-    let cleanedLine, line;
+    let cleanedLine; let
+      line;
     this.logger.debug(`Parsing help for ${path}`);
     const scriptName = Path.basename(path).replace(/\.(coffee|js)$/, '');
     const scriptDocumentation = {};
@@ -578,10 +585,10 @@ class Robot {
     const body = Fs.readFileSync(path, 'utf-8');
 
     let currentSection = null;
-    for (line of Array.from(body.split("\n"))) {
+    for (line of Array.from(body.split('\n'))) {
       if ((line[0] !== '#') && (line.substr(0, 2) !== '//')) { break; }
 
-      cleanedLine = line.replace(/^(#|\/\/)\s?/, "").trim();
+      cleanedLine = line.replace(/^(#|\/\/)\s?/, '').trim();
 
       if (cleanedLine.length === 0) { continue; }
       if (cleanedLine.toLowerCase() === 'none') { continue; }
@@ -590,12 +597,10 @@ class Robot {
       if (Array.from(HUBOT_DOCUMENTATION_SECTIONS).includes(nextSection)) {
         currentSection = nextSection;
         scriptDocumentation[currentSection] = [];
-      } else {
-        if (currentSection) {
-          scriptDocumentation[currentSection].push(cleanedLine.trim());
-          if (currentSection === 'commands') {
-            this.commands.push(cleanedLine.trim());
-          }
+      } else if (currentSection) {
+        scriptDocumentation[currentSection].push(cleanedLine.trim());
+        if (currentSection === 'commands') {
+          this.commands.push(cleanedLine.trim());
         }
       }
     }
@@ -605,7 +610,7 @@ class Robot {
       scriptDocumentation.commands = [];
       return (() => {
         const result = [];
-        for (line of Array.from(body.split("\n"))) {
+        for (line of Array.from(body.split('\n'))) {
           if (!((line[0] === '#') || (line.substr(0, 2) === '//'))) { break; }
           if (!line.match('-')) { continue; }
           cleanedLine = line.slice(2, +line.length + 1 || undefined).replace(/^hubot/i, this.name).trim();
@@ -677,7 +682,7 @@ class Robot {
   //
   // Returns nothing.
   run() {
-    this.emit("running");
+    this.emit('running');
     return this.adapter.run();
   }
 
@@ -741,8 +746,8 @@ class Robot {
   //
   // Returns the original object with updated changes.
   extend(obj, ...sources) {
-    for (let source of Array.from(sources)) {
-      for (let key of Object.keys(source || {})) { const value = source[key]; obj[key] = value; }
+    for (const source of Array.from(sources)) {
+      for (const key of Object.keys(source || {})) { const value = source[key]; obj[key] = value; }
     }
     return obj;
   }
