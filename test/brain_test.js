@@ -1,253 +1,313 @@
-# Assertions and Stubbing
-chai = require 'chai'
-sinon = require 'sinon'
-chai.use require 'sinon-chai'
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// Assertions and Stubbing
+const chai = require('chai');
+const sinon = require('sinon');
+chai.use(require('sinon-chai'));
 
-{ expect } = chai
+const { expect } = chai;
 
-# Hubot classes
-Brain = require '../src/brain'
-User = require '../src/user'
+// Hubot classes
+const Brain = require('../src/brain');
+const User = require('../src/user');
 
-describe 'Brain', ->
-  beforeEach ->
-    @clock = sinon.useFakeTimers()
-    @mockRobot =
-      emit: ->
-      on: ->
+describe('Brain', function() {
+  beforeEach(function() {
+    this.clock = sinon.useFakeTimers();
+    this.mockRobot = {
+      emit() {},
+      on() {}
+    };
 
-    # This *should* be callsArgAsync to match the 'on' API, but that makes
-    # the tests more complicated and seems irrelevant.
-    sinon.stub(@mockRobot, 'on').withArgs('running').callsArg(1)
+    // This *should* be callsArgAsync to match the 'on' API, but that makes
+    // the tests more complicated and seems irrelevant.
+    sinon.stub(this.mockRobot, 'on').withArgs('running').callsArg(1);
 
-    @brain = new Brain @mockRobot
+    this.brain = new Brain(this.mockRobot);
 
-    @user1 = @brain.userForId '1', name: 'Guy One'
-    @user2 = @brain.userForId '2', name: 'Guy One Two'
-    @user3 = @brain.userForId '3', name: 'Girl Three'
+    this.user1 = this.brain.userForId('1', {name: 'Guy One'});
+    this.user2 = this.brain.userForId('2', {name: 'Guy One Two'});
+    return this.user3 = this.brain.userForId('3', {name: 'Girl Three'});
+  });
 
-  afterEach ->
-    @clock.restore()
+  afterEach(function() {
+    return this.clock.restore();
+  });
 
-  describe 'Unit Tests', ->
-    describe '#mergeData', ->
-      it 'performs a proper merge with the new data taking precedent', ->
-        @brain.data =
-          1: 'old'
+  describe('Unit Tests', function() {
+    describe('#mergeData', function() {
+      it('performs a proper merge with the new data taking precedent', function() {
+        this.brain.data = {
+          1: 'old',
           2: 'old'
+        };
 
-        @brain.mergeData
+        this.brain.mergeData({
+          2: 'new'});
+
+        return expect(this.brain.data).to.deep.equal({
+          1: 'old',
           2: 'new'
+        });
+      });
 
-        expect(@brain.data).to.deep.equal
-          1: 'old'
-          2: 'new'
+      return it('emits a loaded event with the new data', function() {
+         sinon.spy(this.brain, 'emit');
+         this.brain.mergeData({});
+         return expect(this.brain.emit).to.have.been.calledWith('loaded', this.brain.data);
+       });
+    });
 
-       it 'emits a loaded event with the new data', ->
-         sinon.spy @brain, 'emit'
-         @brain.mergeData {}
-         expect(@brain.emit).to.have.been.calledWith('loaded', @brain.data)
+    describe('#save', () => it('emits a save event', function() {
+      sinon.spy(this.brain, 'emit');
+      this.brain.save();
+      return expect(this.brain.emit).to.have.been.calledWith('save', this.brain.data);
+    }));
 
-    describe '#save', ->
-      it 'emits a save event', ->
-        sinon.spy @brain, 'emit'
-        @brain.save()
-        expect(@brain.emit).to.have.been.calledWith('save', @brain.data)
+    describe('#resetSaveInterval', () => it('updates the auto-save interval', function() {
+      sinon.spy(this.brain, 'save');
+      // default is 5s
+      this.brain.resetSaveInterval(10);
+      // make sure autosave is on
+      this.brain.setAutoSave(true);
 
-    describe '#resetSaveInterval', ->
-      it 'updates the auto-save interval', ->
-        sinon.spy @brain, 'save'
-        # default is 5s
-        @brain.resetSaveInterval 10
-        # make sure autosave is on
-        @brain.setAutoSave true
+      this.clock.tick(5000);
+      // old interval has passed
+      expect(this.brain.save).to.not.have.been.called;
+      this.clock.tick(5000);
+      // new interval has passed
+      return expect(this.brain.save).to.have.been.calledOnce;
+    }));
 
-        @clock.tick(5000)
-        # old interval has passed
-        expect(@brain.save).to.not.have.been.called
-        @clock.tick(5000)
-        # new interval has passed
-        expect(@brain.save).to.have.been.calledOnce
+    describe('#close', function() {
+      it('saves', function() {
+        sinon.spy(this.brain, 'save');
+        this.brain.close();
+        return expect(this.brain.save).to.have.been.calledOnce;
+      });
 
-    describe '#close', ->
-      it 'saves', ->
-        sinon.spy @brain, 'save'
-        @brain.close()
-        expect(@brain.save).to.have.been.calledOnce
+      it('emits a close event', function() {
+        sinon.spy(this.brain, 'emit');
+        this.brain.close();
+        return expect(this.brain.emit).to.have.been.calledWith('close');
+      });
 
-      it 'emits a close event', ->
-        sinon.spy @brain, 'emit'
-        @brain.close()
-        expect(@brain.emit).to.have.been.calledWith('close')
+      it('saves before emitting the close event', function() {
+        sinon.spy(this.brain, 'save');
+        sinon.spy(this.brain, 'emit').withArgs('close');
+        this.brain.close();
+        return expect(this.brain.save).to.have.been.calledBefore(this.brain.emit);
+      });
 
-      it 'saves before emitting the close event', ->
-        sinon.spy(@brain, 'save')
-        sinon.spy(@brain, 'emit').withArgs('close')
-        @brain.close()
-        expect(@brain.save).to.have.been.calledBefore(@brain.emit)
+      return it('stops auto-saving', function() {
+        // make sure autosave is on
+        this.brain.setAutoSave(true);
+        this.brain.close();
 
-      it 'stops auto-saving', ->
-        # make sure autosave is on
-        @brain.setAutoSave true
-        @brain.close()
+        // set up the spy after because 'close' calls 'save'
+        sinon.spy(this.brain, 'save');
 
-        # set up the spy after because 'close' calls 'save'
-        sinon.spy @brain, 'save'
+        this.clock.tick(2*5000);
+        return expect(this.brain.save).to.not.have.been.called;
+      });
+    });
 
-        @clock.tick(2*5000)
-        expect(@brain.save).to.not.have.been.called
+    describe('#get', function() {
+      it('returns the saved value', function() {
+        this.brain.data._private['test-key'] = 'value';
+        return expect(this.brain.get('test-key')).to.equal('value');
+      });
 
-    describe '#get', ->
-      it 'returns the saved value', ->
-        @brain.data._private['test-key'] = 'value'
-        expect(@brain.get('test-key')).to.equal('value')
+      return it('returns null if object is not found', function() {
+        return expect(this.brain.get('not a real key')).to.be.null;
+      });
+    });
 
-      it 'returns null if object is not found', ->
-        expect(@brain.get('not a real key')).to.be.null
+    describe('#set', function() {
+      it('saves the value', function() {
+        this.brain.set('test-key', 'value');
+        return expect(this.brain.data._private['test-key']).to.equal('value');
+      });
 
-    describe '#set', ->
-      it 'saves the value', ->
-        @brain.set('test-key', 'value')
-        expect(@brain.data._private['test-key']).to.equal('value')
-
-      it 'sets multiple keys at once if an object is provided', ->
-        @brain.data._private =
-          key1: 'val1'
+      it('sets multiple keys at once if an object is provided', function() {
+        this.brain.data._private = {
+          key1: 'val1',
           key2: 'val1'
+        };
 
-        @brain.set
-          key2: 'val2'
+        this.brain.set({
+          key2: 'val2',
           key3: 'val2'
+        });
 
-        expect(@brain.data._private).to.deep.equal
-          key1: 'val1'
-          key2: 'val2'
+        return expect(this.brain.data._private).to.deep.equal({
+          key1: 'val1',
+          key2: 'val2',
           key3: 'val2'
+        });
+      });
 
-      # Unable to understand why this behavior is needed, but adding a test
-      # case to protect it
-      it 'emits loaded', ->
-        sinon.spy @brain, 'emit'
-        @brain.set('test-key', 'value')
-        expect(@brain.emit).to.have.been.calledWith('loaded', @brain.data)
+      // Unable to understand why this behavior is needed, but adding a test
+      // case to protect it
+      it('emits loaded', function() {
+        sinon.spy(this.brain, 'emit');
+        this.brain.set('test-key', 'value');
+        return expect(this.brain.emit).to.have.been.calledWith('loaded', this.brain.data);
+      });
 
-      it 'returns the brain', ->
-        expect(@brain.set('test-key', 'value')).to.equal(@brain)
+      return it('returns the brain', function() {
+        return expect(this.brain.set('test-key', 'value')).to.equal(this.brain);
+      });
+    });
 
-    describe '#remove', ->
-      it 'removes the specified key', ->
-        @brain.data._private['test-key'] = 'value'
-        @brain.remove 'test-key'
-        expect(@brain.data._private).to.not.include.keys('test-key')
+    describe('#remove', () => it('removes the specified key', function() {
+      this.brain.data._private['test-key'] = 'value';
+      this.brain.remove('test-key');
+      return expect(this.brain.data._private).to.not.include.keys('test-key');
+    }));
 
-    describe '#userForId', ->
-      it 'returns the user object', ->
-        expect(@brain.userForId(1)).to.equal(@user1)
+    describe('#userForId', function() {
+      it('returns the user object', function() {
+        return expect(this.brain.userForId(1)).to.equal(this.user1);
+      });
 
-      it 'does an exact match', ->
-        user4 = @brain.userForId('FOUR')
-        expect(@brain.userForId('four')).to.not.equal(user4)
+      it('does an exact match', function() {
+        const user4 = this.brain.userForId('FOUR');
+        return expect(this.brain.userForId('four')).to.not.equal(user4);
+      });
 
-      # Cannot understand why this behavior is needed, but adding a test case
-      # to protect it
-      it 'recreates the user if the room option differs from the user object', ->
-        expect(@brain.userForId(1).room).to.be.undefined
+      // Cannot understand why this behavior is needed, but adding a test case
+      // to protect it
+      it('recreates the user if the room option differs from the user object', function() {
+        expect(this.brain.userForId(1).room).to.be.undefined;
 
-        # undefined -> having a room
-        newUser1 = @brain.userForId(1, room: 'room1')
-        expect(newUser1).to.not.equal(@user1)
+        // undefined -> having a room
+        const newUser1 = this.brain.userForId(1, {room: 'room1'});
+        expect(newUser1).to.not.equal(this.user1);
 
-        # changing the room
-        newUser2 = @brain.userForId(1, room: 'room2')
-        expect(newUser2).to.not.equal(newUser1)
+        // changing the room
+        const newUser2 = this.brain.userForId(1, {room: 'room2'});
+        return expect(newUser2).to.not.equal(newUser1);
+      });
 
-      describe 'when there is no matching user ID', ->
-        it 'creates a new User', ->
-          expect(@brain.data.users).to.not.include.key('all-new-user')
-          newUser = @brain.userForId('all-new-user')
-          expect(newUser).to.be.instanceof(User)
-          expect(newUser.id).to.equal('all-new-user')
-          expect(@brain.data.users).to.include.key('all-new-user')
+      return describe('when there is no matching user ID', function() {
+        it('creates a new User', function() {
+          expect(this.brain.data.users).to.not.include.key('all-new-user');
+          const newUser = this.brain.userForId('all-new-user');
+          expect(newUser).to.be.instanceof(User);
+          expect(newUser.id).to.equal('all-new-user');
+          return expect(this.brain.data.users).to.include.key('all-new-user');
+        });
 
-        it 'passes the provided options to the new User', ->
-          newUser = @brain.userForId('all-new-user', name: 'All New User', prop: 'mine')
-          expect(newUser.name).to.equal('All New User')
-          expect(newUser.prop).to.equal('mine')
+        return it('passes the provided options to the new User', function() {
+          const newUser = this.brain.userForId('all-new-user', {name: 'All New User', prop: 'mine'});
+          expect(newUser.name).to.equal('All New User');
+          return expect(newUser.prop).to.equal('mine');
+        });
+      });
+    });
 
-    describe '#userForName', ->
-      it 'returns the user with a matching name', ->
-        expect(@brain.userForName('Guy One')).to.equal(@user1)
+    describe('#userForName', function() {
+      it('returns the user with a matching name', function() {
+        return expect(this.brain.userForName('Guy One')).to.equal(this.user1);
+      });
 
-      it 'does a case-insensitive match', ->
-        expect(@brain.userForName('guy one')).to.equal(@user1)
+      it('does a case-insensitive match', function() {
+        return expect(this.brain.userForName('guy one')).to.equal(this.user1);
+      });
 
-      it 'returns null if no user matches', ->
-        expect(@brain.userForName('not a real user')).to.be.null
+      return it('returns null if no user matches', function() {
+        return expect(this.brain.userForName('not a real user')).to.be.null;
+      });
+    });
 
-    describe '#usersForRawFuzzyName', ->
-      it 'does a case-insensitive match', ->
-        expect(@brain.usersForRawFuzzyName('guy')).to.have.members([@user1,@user2])
+    describe('#usersForRawFuzzyName', function() {
+      it('does a case-insensitive match', function() {
+        return expect(this.brain.usersForRawFuzzyName('guy')).to.have.members([this.user1,this.user2]);
+      });
 
-      it 'returns all matching users (prefix match) when there is not an exact match (case-insensitive)', ->
-        expect(@brain.usersForRawFuzzyName('Guy')).to.have.members([@user1,@user2])
+      it('returns all matching users (prefix match) when there is not an exact match (case-insensitive)', function() {
+        return expect(this.brain.usersForRawFuzzyName('Guy')).to.have.members([this.user1,this.user2]);
+      });
 
-      it 'returns all matching users (prefix match) when there is an exact match (case-insensitive)', ->
-        # Matched case
-        expect(@brain.usersForRawFuzzyName('Guy One')).to.deep.equal([@user1,@user2])
-        # Mismatched case
-        expect(@brain.usersForRawFuzzyName('guy one')).to.deep.equal([@user1,@user2])
+      it('returns all matching users (prefix match) when there is an exact match (case-insensitive)', function() {
+        // Matched case
+        expect(this.brain.usersForRawFuzzyName('Guy One')).to.deep.equal([this.user1,this.user2]);
+        // Mismatched case
+        return expect(this.brain.usersForRawFuzzyName('guy one')).to.deep.equal([this.user1,this.user2]);
+      });
 
-      it 'returns an empty array if no users match', ->
-        result = @brain.usersForRawFuzzyName('not a real user')
-        expect(result).to.be.an('array')
-        expect(result).to.be.empty
+      return it('returns an empty array if no users match', function() {
+        const result = this.brain.usersForRawFuzzyName('not a real user');
+        expect(result).to.be.an('array');
+        return expect(result).to.be.empty;
+      });
+    });
 
-    describe '#usersForFuzzyName', ->
-      it 'does a case-insensitive match', ->
-        expect(@brain.usersForFuzzyName('guy')).to.have.members([@user1,@user2])
+    return describe('#usersForFuzzyName', function() {
+      it('does a case-insensitive match', function() {
+        return expect(this.brain.usersForFuzzyName('guy')).to.have.members([this.user1,this.user2]);
+      });
 
-      it 'returns all matching users (prefix match) when there is not an exact match', ->
-        expect(@brain.usersForFuzzyName('Guy')).to.have.members([@user1,@user2])
+      it('returns all matching users (prefix match) when there is not an exact match', function() {
+        return expect(this.brain.usersForFuzzyName('Guy')).to.have.members([this.user1,this.user2]);
+      });
 
-      it 'returns just the user when there is an exact match (case-insensitive)', ->
-        # Matched case
-        expect(@brain.usersForFuzzyName('Guy One')).to.deep.equal([@user1])
-        # Mismatched case
-        expect(@brain.usersForFuzzyName('guy one')).to.deep.equal([@user1])
+      it('returns just the user when there is an exact match (case-insensitive)', function() {
+        // Matched case
+        expect(this.brain.usersForFuzzyName('Guy One')).to.deep.equal([this.user1]);
+        // Mismatched case
+        return expect(this.brain.usersForFuzzyName('guy one')).to.deep.equal([this.user1]);
+      });
 
-      it 'returns an empty array if no users match', ->
-        result = @brain.usersForFuzzyName('not a real user')
-        expect(result).to.be.an('array')
-        expect(result).to.be.empty
+      return it('returns an empty array if no users match', function() {
+        const result = this.brain.usersForFuzzyName('not a real user');
+        expect(result).to.be.an('array');
+        return expect(result).to.be.empty;
+      });
+    });
+  });
 
-  describe 'Auto-Save', ->
-    it 'is on by default', ->
-      expect(@brain.autoSave).to.equal(true)
+  describe('Auto-Save', function() {
+    it('is on by default', function() {
+      return expect(this.brain.autoSave).to.equal(true);
+    });
 
-    it 'automatically saves every 5 seconds when turned on', ->
-      sinon.spy @brain, 'save'
+    it('automatically saves every 5 seconds when turned on', function() {
+      sinon.spy(this.brain, 'save');
 
-      @brain.setAutoSave true
+      this.brain.setAutoSave(true);
 
-      @clock.tick(5000)
-      expect(@brain.save).to.have.been.called
+      this.clock.tick(5000);
+      return expect(this.brain.save).to.have.been.called;
+    });
 
-    it 'does not auto-save when turned off', ->
-      sinon.spy @brain, 'save'
+    return it('does not auto-save when turned off', function() {
+      sinon.spy(this.brain, 'save');
 
-      @brain.setAutoSave false
+      this.brain.setAutoSave(false);
 
-      @clock.tick(2*5000)
-      expect(@brain.save).to.not.have.been.called
+      this.clock.tick(2*5000);
+      return expect(this.brain.save).to.not.have.been.called;
+    });
+  });
 
-  describe 'User Searching', ->
-    it 'finds users by ID', ->
-      expect(@brain.userForId('1')).to.equal(@user1)
+  return describe('User Searching', function() {
+    it('finds users by ID', function() {
+      return expect(this.brain.userForId('1')).to.equal(this.user1);
+    });
 
-    it 'finds users by exact name', ->
-      expect(@brain.userForName('Guy One')).to.equal(@user1)
+    it('finds users by exact name', function() {
+      return expect(this.brain.userForName('Guy One')).to.equal(this.user1);
+    });
 
-    it 'finds users by fuzzy name (prefix match)', ->
-      result = @brain.usersForFuzzyName('Guy')
-      expect(result).to.have.members([@user1, @user2])
-      expect(result).to.not.have.members([@user3])
+    return it('finds users by fuzzy name (prefix match)', function() {
+      const result = this.brain.usersForFuzzyName('Guy');
+      expect(result).to.have.members([this.user1, this.user2]);
+      return expect(result).to.not.have.members([this.user3]);
+    });
+  });
+});

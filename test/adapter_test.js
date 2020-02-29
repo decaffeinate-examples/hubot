@@ -1,74 +1,105 @@
-chai = require 'chai'
-sinon = require 'sinon'
-chai.use require 'sinon-chai'
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+const chai = require('chai');
+const sinon = require('sinon');
+chai.use(require('sinon-chai'));
 
-expect = chai.expect
+const {
+  expect
+} = chai;
 
-Adapter = require '../src/adapter'
+const Adapter = require('../src/adapter');
 
-describe 'Adapter', ->
-  beforeEach ->
-    @robot =
-      receive: sinon.spy()
+describe('Adapter', function() {
+  beforeEach(function() {
+    return this.robot =
+      {receive: sinon.spy()};
+  });
 
-  # this one is hard, as it requires files
-  it "can load adapter by name"
+  // this one is hard, as it requires files
+  it("can load adapter by name");
 
-  describe 'Public API', ->
-    beforeEach ->
-      @adapter = new Adapter(@robot)
+  describe('Public API', function() {
+    beforeEach(function() {
+      return this.adapter = new Adapter(this.robot);
+    });
 
-    it 'assigns robot', ->
-      expect(@adapter.robot).to.equal(@robot)
+    it('assigns robot', function() {
+      return expect(this.adapter.robot).to.equal(this.robot);
+    });
 
-    describe 'send', ->
-      it 'is a function', ->
-        expect(@adapter.send).to.be.a('function')
+    describe('send', function() {
+      it('is a function', function() {
+        return expect(this.adapter.send).to.be.a('function');
+      });
 
-      it 'does nothing', ->
-        @adapter.send({}, 'nothing')
+      return it('does nothing', function() {
+        return this.adapter.send({}, 'nothing');
+      });
+    });
 
-    describe 'reply', ->
-      it 'is a function', ->
-        expect(@adapter.reply).to.be.a('function')
+    describe('reply', function() {
+      it('is a function', function() {
+        return expect(this.adapter.reply).to.be.a('function');
+      });
 
-      it 'does nothing', ->
-        @adapter.reply({}, 'nothing')
+      return it('does nothing', function() {
+        return this.adapter.reply({}, 'nothing');
+      });
+    });
 
-    describe 'topic', ->
-      it 'is a function', ->
-        expect(@adapter.topic).to.be.a('function')
+    describe('topic', function() {
+      it('is a function', function() {
+        return expect(this.adapter.topic).to.be.a('function');
+      });
 
-      it 'does nothing', ->
-        @adapter.topic({}, 'nothing')
+      return it('does nothing', function() {
+        return this.adapter.topic({}, 'nothing');
+      });
+    });
 
-    describe 'play', ->
-      it 'is a function', ->
-        expect(@adapter.play).to.be.a('function')
+    describe('play', function() {
+      it('is a function', function() {
+        return expect(this.adapter.play).to.be.a('function');
+      });
 
-      it 'does nothing', ->
-        @adapter.play({}, 'nothing')
+      return it('does nothing', function() {
+        return this.adapter.play({}, 'nothing');
+      });
+    });
 
-    describe 'run', ->
-      it 'is a function', ->
-        expect(@adapter.run).to.be.a('function')
+    describe('run', function() {
+      it('is a function', function() {
+        return expect(this.adapter.run).to.be.a('function');
+      });
 
-      it 'does nothing', ->
-        @adapter.run()
+      return it('does nothing', function() {
+        return this.adapter.run();
+      });
+    });
 
-    describe 'close', ->
-      it 'is a function', ->
-        expect(@adapter.close).to.be.a('function')
+    return describe('close', function() {
+      it('is a function', function() {
+        return expect(this.adapter.close).to.be.a('function');
+      });
 
-      it 'does nothing', ->
-        @adapter.close()
+      return it('does nothing', function() {
+        return this.adapter.close();
+      });
+    });
+  });
 
 
-  it 'dispatches received messages to the robot', ->
-    @robot.receive = sinon.spy()
-    @adapter = new Adapter(@robot)
-    @message = sinon.spy()
+  return it('dispatches received messages to the robot', function() {
+    this.robot.receive = sinon.spy();
+    this.adapter = new Adapter(this.robot);
+    this.message = sinon.spy();
 
-    @adapter.receive(@message)
+    this.adapter.receive(this.message);
 
-    expect(@robot.receive).to.have.been.calledWith(@message)
+    return expect(this.robot.receive).to.have.been.calledWith(this.message);
+  });
+});

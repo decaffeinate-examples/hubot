@@ -1,32 +1,40 @@
-# Assertions and Stubbing
-chai = require 'chai'
-sinon = require 'sinon'
-chai.use require 'sinon-chai'
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// Assertions and Stubbing
+const chai = require('chai');
+const sinon = require('sinon');
+chai.use(require('sinon-chai'));
 
-{ expect } = chai
+const { expect } = chai;
 
-# Hubot classes
-User = require '../src/user'
-{ CatchAllMessage, EnterMessage, Message, TextMessage } = require '../src/message'
+// Hubot classes
+const User = require('../src/user');
+const { CatchAllMessage, EnterMessage, Message, TextMessage } = require('../src/message');
 
-describe 'Message', ->
-  beforeEach ->
-    @user = new User
-      id: 1
-      name: 'hubottester'
+describe('Message', function() {
+  beforeEach(function() {
+    return this.user = new User({
+      id: 1,
+      name: 'hubottester',
       room: '#mocha'
+    });
+  });
 
-  describe 'Unit Tests', ->
-    describe '#finish', ->
-      it 'marks the message as done', ->
-        testMessage = new Message(@user)
-        expect(testMessage.done).to.not.be.ok
-        testMessage.finish()
-        expect(testMessage.done).to.be.ok
+  return describe('Unit Tests', function() {
+    describe('#finish', () => it('marks the message as done', function() {
+      const testMessage = new Message(this.user);
+      expect(testMessage.done).to.not.be.ok;
+      testMessage.finish();
+      return expect(testMessage.done).to.be.ok;
+    }));
 
-    describe 'TextMessage', ->
-      describe '#match', ->
-        it 'should perform standard regex matching', ->
-          testMessage = new TextMessage(@user, 'message123')
-          expect( testMessage.match(/^message123$/) ).to.be.ok
-          expect( testMessage.match(/^does-not-match$/) ).to.not.be.ok
+    return describe('TextMessage', () => describe('#match', () => it('should perform standard regex matching', function() {
+      const testMessage = new TextMessage(this.user, 'message123');
+      expect( testMessage.match(/^message123$/) ).to.be.ok;
+      return expect( testMessage.match(/^does-not-match$/) ).to.not.be.ok;
+    })));
+  });
+});

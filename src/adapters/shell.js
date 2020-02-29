@@ -1,105 +1,134 @@
-fs       = require('fs')
-readline = require('readline')
-stream   = require('stream')
-cline    = require('cline')
-chalk    = require('chalk')
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+const fs       = require('fs');
+const readline = require('readline');
+const stream   = require('stream');
+const cline    = require('cline');
+const chalk    = require('chalk');
 
-Robot         = require '../robot'
-Adapter       = require '../adapter'
-{TextMessage} = require '../message'
+const Robot         = require('../robot');
+const Adapter       = require('../adapter');
+const {TextMessage} = require('../message');
 
-historySize = if process.env.HUBOT_SHELL_HISTSIZE?
+const historySize = (process.env.HUBOT_SHELL_HISTSIZE != null) ?
                 parseInt(process.env.HUBOT_SHELL_HISTSIZE)
-              else
-                1024
+              :
+                1024;
 
-historyPath = ".hubot_history"
+const historyPath = ".hubot_history";
 
-class Shell extends Adapter
-  send: (envelope, strings...) ->
-    console.log chalk.bold("#{str}") for str in strings
+class Shell extends Adapter {
+  send(envelope, ...strings) {
+    return Array.from(strings).map((str) => console.log(chalk.bold(`${str}`)));
+  }
 
-  emote: (envelope, strings...) ->
-    @send envelope, "* #{str}" for str in strings
+  emote(envelope, ...strings) {
+    return Array.from(strings).map((str) => this.send(envelope, `* ${str}`));
+  }
 
-  reply: (envelope, strings...) ->
-    strings = strings.map (s) -> "#{envelope.user.name}: #{s}"
-    @send envelope, strings...
+  reply(envelope, ...strings) {
+    strings = strings.map(s => `${envelope.user.name}: ${s}`);
+    return this.send(envelope, ...Array.from(strings));
+  }
 
-  run: ->
-    @buildCli()
+  run() {
+    this.buildCli();
 
-    @loadHistory (history) =>
-      @cli.history(history)
-      @cli.interact("#{@robot.name}> ")
-      @emit 'connected'
+    return this.loadHistory(history => {
+      this.cli.history(history);
+      this.cli.interact(`${this.robot.name}> `);
+      return this.emit('connected');
+    });
+  }
 
-  shutdown: () ->
-    @robot.shutdown()
-    process.exit 0
+  shutdown() {
+    this.robot.shutdown();
+    return process.exit(0);
+  }
 
-  buildCli: () ->
-    @cli = cline()
+  buildCli() {
+    this.cli = cline();
 
-    @cli.command '*', (input) =>
-      userId = process.env.HUBOT_SHELL_USER_ID or '1'
-      if userId.match (/\A\d+\z/)
-        userId = parseInt(userId)
+    this.cli.command('*', input => {
+      let userId = process.env.HUBOT_SHELL_USER_ID || '1';
+      if (userId.match((/\A\d+\z/))) {
+        userId = parseInt(userId);
+      }
 
-      userName = process.env.HUBOT_SHELL_USER_NAME or 'Shell'
-      user = @robot.brain.userForId userId, name: userName, room: 'Shell'
-      @receive new TextMessage user, input, 'messageId'
+      const userName = process.env.HUBOT_SHELL_USER_NAME || 'Shell';
+      const user = this.robot.brain.userForId(userId, {name: userName, room: 'Shell'});
+      return this.receive(new TextMessage(user, input, 'messageId'));
+    });
 
-    @cli.command 'history', () =>
-      console.log item for item in @cli.history()
+    this.cli.command('history', () => {
+      return Array.from(this.cli.history()).map((item) => console.log(item));
+    });
 
-    @cli.on 'history', (item) =>
-      if item.length > 0 and item isnt 'exit' and item isnt 'history'
-        fs.appendFile historyPath, "#{item}\n", (err) =>
-          @robot.emit 'error', err if err
+    this.cli.on('history', item => {
+      if ((item.length > 0) && (item !== 'exit') && (item !== 'history')) {
+        return fs.appendFile(historyPath, `${item}\n`, err => {
+          if (err) { return this.robot.emit('error', err); }
+        });
+      }
+    });
 
-    @cli.on 'close', () =>
-      history = @cli.history()
-      if history.length > historySize
-        startIndex = history.length - historySize
-        history = history.reverse().splice(startIndex, historySize)
+    return this.cli.on('close', () => {
+      let history = this.cli.history();
+      if (history.length > historySize) {
+        const startIndex = history.length - historySize;
+        history = history.reverse().splice(startIndex, historySize);
 
-        fileOpts = { mode:0o600 }
-        outstream = fs.createWriteStream(historyPath, fileOpts)
-        # >= node 0.10
-        outstream.on 'finish', () =>
-          @shutdown()
+        const fileOpts = { mode:0o600 };
+        const outstream = fs.createWriteStream(historyPath, fileOpts);
+        // >= node 0.10
+        outstream.on('finish', () => {
+          return this.shutdown();
+        });
 
-        for item in history
-          outstream.write "#{item}\n"
+        for (let item of Array.from(history)) {
+          outstream.write(`${item}\n`);
+        }
 
-        # < node 0.10
-        outstream.end () =>
-          @shutdown()
-       else
-         @shutdown()
+        // < node 0.10
+        return outstream.end(() => {
+          return this.shutdown();
+        });
+       } else {
+         return this.shutdown();
+       }
+    });
+  }
 
-  # Private: load history from .hubot_history.
-  #
-  # callback - A Function that is called with the loaded history items (or an empty array if there is no history)
-  loadHistory: (callback) ->
-    fs.exists historyPath, (exists) ->
-      if exists
-        instream = fs.createReadStream(historyPath)
-        outstream = new stream
-        outstream.readable = true
-        outstream.writable = true
+  // Private: load history from .hubot_history.
+  //
+  // callback - A Function that is called with the loaded history items (or an empty array if there is no history)
+  loadHistory(callback) {
+    return fs.exists(historyPath, function(exists) {
+      if (exists) {
+        const instream = fs.createReadStream(historyPath);
+        const outstream = new stream;
+        outstream.readable = true;
+        outstream.writable = true;
 
-        items = []
-        rl = readline.createInterface(input: instream, output: outstream, terminal: false)
-        rl.on 'line', (line) ->
-          line = line.trim()
-          if line.length > 0 
-            items.push(line)
-        rl.on 'close', () ->
-          callback(items)
-      else
-        callback([])
+        const items = [];
+        const rl = readline.createInterface({input: instream, output: outstream, terminal: false});
+        rl.on('line', function(line) {
+          line = line.trim();
+          if (line.length > 0) { 
+            return items.push(line);
+          }
+        });
+        return rl.on('close', () => callback(items));
+      } else {
+        return callback([]);
+      }
+    });
+  }
+}
 
-exports.use = (robot) ->
-  new Shell robot
+exports.use = robot => new Shell(robot);
